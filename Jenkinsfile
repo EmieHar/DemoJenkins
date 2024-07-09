@@ -5,7 +5,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the code from the repository
-                 git branch: 'main', url:'https://github.com/EmieHar/DemoJenkins.git', credentialsId: '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'
+                 git branch: 'main', url:'https://github.com/EmieHar/DemoJenkins.git', credentialsId: 'GitHubCredential'
             }
         }
 
