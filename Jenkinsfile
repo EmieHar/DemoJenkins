@@ -1,44 +1,58 @@
 pipeline {
     agent any
 
+    environment {
+        // Define environment variables if needed
+        DOCKER_IMAGE = "DOCKER_IMAGE"
+        DOCKER_TAG = "latest"
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from the repository
+                // Checkout the source code from your repository
                  git branch: 'main', url:'https://github.com/EmieHar/DemoJenkins.git', credentialsId: 'GitHubCredential'
             }
         }
 
         stage('Build') {
             steps {
-                // Build the Spring Boot application
-                sh 'chmod +x ./mvnw'
-                sh './mvnw clean install'
+                script {
+                    // Build the Docker image
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                }
             }
         }
 
         stage('Test') {
             steps {
-                // Run the tests
-                sh './mvnw test'
+                script {
+                    // Run your tests here
+                    // For example, you could run a container from the built image and execute tests inside it
+                    sh "docker run --rm ${DOCKER_IMAGE}:${DOCKER_TAG} sh ./mvnw test"
+                }
             }
         }
 
-        stage('Package') {
+        stage('Push') {
             steps {
-                // Package the application
-                sh './mvnw package'
+                script {
+                    // Use Docker credentials to log in and push the image
+                    withCredentials([usernamePassword(credentialsId: 'DockerCredential', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
+                        sh "echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin"
+                        sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                    }
+                }
             }
         }
-
     }
 
     post {
-        success {
-            echo 'Pipeline succeeded!'
-        }
-        failure {
-            echo 'Pipeline failed!'
+        always {
+            // Cleanup
+            script {
+                sh "docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG}"
+            }
         }
     }
 }
