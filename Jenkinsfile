@@ -12,6 +12,7 @@ pipeline {
         stage('Build') {
             steps {
                 // Build the Spring Boot application
+                sh 'chmod +x ./mvnw'
                 sh './mvnw clean install'
             }
         }
