@@ -5,7 +5,7 @@ FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 # Copy the jar file from the host to the container
-COPY demojenkins-0.0.1-SNAPSHOT.jar app.jar
+COPY demo-0.0.1-SNAPSHOT.jar app.jar
 
 # Specify the command to run the jar file
 CMD ["java", "-jar", "app.jar"]
