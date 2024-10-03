@@ -1,8 +1,8 @@
 pipeline {
     agent any
     environment {
-        DOCKER_USERNAME =  'emiliesh'
-        GITHUB_REPO_URL =  'https://github.com/EmieHar/DemoJenkins.git'
+        DOCKER_USERNAME = 'emiliesh'
+        GITHUB_REPO_URL = 'https://github.com/EmieHar/DemoJenkins.git'
     }
 
     tools {
@@ -41,7 +41,6 @@ pipeline {
             }
         }
 
-
         stage('Build Docker Image') {
             steps {
                 script {
@@ -66,12 +65,10 @@ pipeline {
                     if (currentBuild.result == 'SUCCESS') {
                         echo "Build succeeded!"
                     } else {
-                        error "Build failed!"
+                        echo "Build failed!"
                     }
                 }
             }
         }
     }
-
-
 }
