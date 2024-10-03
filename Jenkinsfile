@@ -1,12 +1,13 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'maven:3.6.3-jdk-11' // Utilisez une image avec Maven et JDK
+            args '-v /var/run/docker.sock:/var/run/docker.sock' // Permet l'accès au daemon Docker
+        }
+    }
     environment {
         DOCKER_USERNAME = 'emiliesh'
         GITHUB_REPO_URL = 'https://github.com/EmieHar/DemoJenkins.git'
-    }
-
-    tools {
-        maven 'maven'
     }
 
     stages {
