@@ -1,50 +1,64 @@
 pipeline {
     agent any
-
     environment {
-        // Define environment variables if needed
-        DOCKER_IMAGE = "DOCKER_IMAGE"
-        DOCKER_TAG = "latest"
+        DOCKER_USERNAME =  'emiliesh'
+        GITHUB_REPO_URL =  'https://github.com/EmieHar/cicd-testing-java-cours'
     }
 
-  stage('Build') {
-              steps {
-                  script {
-                       // Build .jar
-                      sh './mvnw clean package'
-                       // Build the Docker image
-                      sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                  }
-              }
-          }
+    tools {
+        maven 'maven'
+    }
 
-          stage('Test') {
-              steps {
-                  script {
-                      // Run your tests here
-                      // For example, you could run a container from the built image and execute tests inside it
-                      sh "docker run --rm ${DOCKER_IMAGE}:${DOCKER_TAG} "
-                  }
-              }
-          }
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: "${env.GITHUB_REPO_URL}"
+            }
+        }
+
+        stage('Clean') {
+            steps {
+                sh 'mvn clean'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn package'
+            }
+        }
 
         stage('Test') {
             steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
                 script {
-                    // Run your tests here
-                    // For example, you could run a container from the built image and execute tests inside it
-                    sh "docker run --rm ${DOCKER_IMAGE}:${DOCKER_TAG} "
+                    def image = docker.build("${env.DOCKER_USERNAME}/dockercred1:${env.BUILD_NUMBER}", '.')
                 }
             }
         }
 
-        stage('Push') {
+        stage('Push Docker Image') {
             steps {
                 script {
-                    // Use Docker credentials to log in and push the image
-                    withCredentials([usernamePassword(credentialsId: 'DockerCredential', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
-                        sh "echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin"
-                        sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                    docker.withRegistry('https://registry.hub.docker.com', 'idJenkins') {
+                        docker.image("${env.DOCKER_USERNAME}/dockercred1:${env.BUILD_NUMBER}").push()
+                    }
+                }
+            }
+        }
+
+        stage('Notify') {
+            steps {
+                script {
+                    if (currentBuild.result == 'SUCCESS') {
+                        echo "Build succeeded!"
+                    } else {
+                        error "Build failed!"
                     }
                 }
             }
@@ -53,10 +67,7 @@ pipeline {
 
     post {
         always {
-            // Cleanup
-            script {
-                sh "docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG}"
-            }
+            cleanWs()
         }
     }
 }
