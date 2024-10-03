@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         DOCKER_USERNAME =  'emiliesh'
-        GITHUB_REPO_URL =  'https://github.com/EmieHar/cicd-testing-java-cours'
+        GITHUB_REPO_URL =  'https://github.com/EmieHar/DemoJenkins.git'
     }
 
     tools {
@@ -30,9 +30,17 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh 'mvn test'
+                script {
+                    try {
+                        sh 'mvn test'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error "Tests failed!"
+                    }
+                }
             }
         }
+
 
         stage('Build Docker Image') {
             steps {
@@ -65,9 +73,5 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            cleanWs()
-        }
-    }
+
 }
